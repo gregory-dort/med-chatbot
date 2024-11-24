@@ -5,6 +5,10 @@
 /.pnp
 .pnp.js
 
+# build output
+build/
+dist/
+
 # testing
 /coverage
 
@@ -21,3 +25,6 @@
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+coverage/
+.vscode/
