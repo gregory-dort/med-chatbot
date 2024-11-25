@@ -6,6 +6,14 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 CORS(app)
 
+#Connecting to SQLite Database
+def get_db_connection():
+    conn = sqlite3.connect('user_data.db')
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# Account Creation API
+# Creates a hash to match with login credentials
 @app.route('/api/create-account', methods = 'POST')
 def create_account():
     data = request.json
@@ -14,28 +22,46 @@ def create_account():
     username = data.get('username')
     password = data.get('password')
 
-    if username and password:
-        return jsonify(
-            {
+    if not username or not password:
+        return jsonify({"error": "Username and password are required"}), 400
+
+    hashed_password = generate_password_hash(password)
+
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute('INSERT INTO users (username, password) VALUES (?, ?)', 
+                       (username, hashed_password))
+        conn.commit()
+        conn.close()
+        return jsonify({
             "message": f"Account for {username} created successfully.",
             "received_payload": data
-            })
-    else:
-        return jsonify({"error": "Invalid input"}), 400    
+        })
+    except sqlite3.IntegrityError:
+        return jsonify({"error": "Username already exists"}), 409
 
+# Login API
+# Matches hashed password with info stored in SQLite database
 @app.route('/api/login', methods = 'POST')
 def login():
     data = request.get_json()
     username = data.get('username')
     password = data.get('password')
 
-    if not data or 'username' not in data or 'password' not in data:
-        return jsonify({"message": "Invalid input"}), 400
+    if not username or not password:
+        return jsonify({"error": "Username and password are required"}), 400
     
-    if username == 'user' and password == 'password':
-        return jsonify({"message": "Login successful"})
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('SELECT * FROM users WHERE username = ?', (username,))
+    user = cursor.fetchone()
+    conn.close()
+
+    if user and check_password_hash(user['password'], password):
+        return jsonify({"message": "Login Successful"})
     else:
-        return jsonify({"message": "invalid credentials"}), 401
+        return jsonify({"message": "Invalid Credentials"}), 401
 
 if __name__ == "__main__":
     app.run(debug = True, use_reloader = False)
