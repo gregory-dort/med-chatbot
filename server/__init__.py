@@ -23,5 +23,19 @@ def create_account():
     else:
         return jsonify({"error": "Invalid input"}), 400    
 
+@app.route('/api/login', methods = 'POST')
+def login():
+    data = request.get_json()
+    username = data.get('username')
+    password = data.get('password')
+
+    if not data or 'username' not in data or 'password' not in data:
+        return jsonify({"message": "Invalid input"}), 400
+    
+    if username == 'user' and password == 'password':
+        return jsonify({"message": "Login successful"})
+    else:
+        return jsonify({"message": "invalid credentials"}), 401
+
 if __name__ == "__main__":
     app.run(debug = True, use_reloader = False)
