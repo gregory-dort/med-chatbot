@@ -41,6 +41,14 @@ def create_account():
     except sqlite3.IntegrityError:
         return jsonify({"error": "Username already exists"}), 409
 
+def add_user(username, hashed_password):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    cursor.execute('INSERT INTO users (username, password) VALUES (?, ?)', 
+                   (username, hashed_password))
+    conn.commit()
+    conn.close()
+
 # Login API
 # Matches hashed password with info stored in SQLite database
 @app.route('/api/login', methods = 'POST')
@@ -54,7 +62,7 @@ def login():
     
     conn = get_db_connection()
     cursor = conn.cursor()
-    cursor.execute('SELECT * FROM users WHERE username = ?', (username,))
+    cursor.execute('SELECT * FROM users WHERE username = ?', (username))
     user = cursor.fetchone()
     conn.close()
 
