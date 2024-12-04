@@ -31,6 +31,7 @@ function App() {
     .catch((error) => console.error("Error:", error));
   };
 
+
   return (
     <div className="App">
       <h1>Create Account</h1>
@@ -53,5 +54,4 @@ function App() {
     </div>
   );
 }
-
 export default App;
